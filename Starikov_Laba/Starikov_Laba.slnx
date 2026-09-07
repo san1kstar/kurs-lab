@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Starikov_Laba/Starikov_Laba.vcxproj" Id="d8481ac0-ea8b-4643-a2bb-fb83d24f5156" />
+</Solution>
