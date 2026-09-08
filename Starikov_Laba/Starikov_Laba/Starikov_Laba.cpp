@@ -37,24 +37,57 @@ void add_pipe() {
     cin >> p.Pipe_name;
     cout << "Enter the pipe diameter.\n";
     cin >> p.diametr;
+    while (p.diametr <= 0) {
+        cout << "ERROR: diametr must be positive! Enter again\n";
+        cin >> p.diametr;
+    }
     cout << "Enter the length of the pipe.\n";
     cin >> p.lenght;
+    while (p.lenght <= 0) {
+        cout << "ERROR: lenght must be positive! Enter again\n";
+        cin >> p.lenght;
+    }
     cout << "Enter the pipe status. (0 - passive, 1 - active)\n";
     cin >> p.status;
+    while (p.status != 0  && p.status != 1) {
+        cout << "ERROR: status must be 0 or 1! Enter again\n";
+        cin >> p.status;
+    }
     cout << "You add a new pipe!\n";
+    cout << "Pipe name: " << p.Pipe_name << "\n";
+    cout << "Diametr: " << p.diametr << "\n";
+    cout << "Lenght: " << p.lenght << "\n";
+    cout << "Status: " << (p.status ? "Active" : "Passsive") << "\n";
 }
 
 void add_CS() {
-    CS c;
-    cout << "Give a name to the CS\n";
-    cin >> c.CS_name;
-    cout << "Enter the count of workshops in CS\n";
+CS c;
+cout << "Give a name to the CS\n";
+cin >> c.CS_name;
+cout << "Enter the count of workshops in CS\n";
+cin >> c.count_workshops;
+while (c.count_workshops <= 0) {
+    cout << "ERROR: count of workshops must be positive\n";
     cin >> c.count_workshops;
-    cout << "Enter the count of active workshops in CS\n";
+}
+cout << "Enter the count of active workshops in CS\n";
+cin >> c.active_workskops;
+while (c.active_workskops <= 0 || c.active_workskops > c.count_workshops) {
+    if (c.active_workskops <= 0) {
+        cout << "ERROR: count of active workshops must be > 0\n";
+    }
+    else {
+        cout << "ERROR: total active workshops must be < count of workshops\n";
+    }
     cin >> c.active_workskops;
-    cout << "Give a class to the CS (A, B, C, D)\n";
+}
+cout << "Give a class to the CS (A, B, C, D)\n";
+cin >> c.CS_class;
+while (c.CS_class != 'A' && c.CS_class != 'B' && c.CS_class != 'C' && c.CS_class != 'D') {
+    cout << "ERROR: Class of CS must be 'A', 'B', 'C' or 'D'\n";
     cin >> c.CS_class;
-    cout << "You add a new CS!\n";
+}
+cout << "You add a new CS!\n";
 }
 
 int main()
