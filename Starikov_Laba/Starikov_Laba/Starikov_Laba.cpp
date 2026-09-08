@@ -7,8 +7,8 @@ using namespace std;
 struct Pipe {
     string Pipe_name;
     double lenght;
-    int diametr;
-    bool status;
+    float diametr;
+    char status;
 };
 
 struct CS {
@@ -19,8 +19,8 @@ struct CS {
 };
 
 void zapusk() {
-    cout << "App menu.\n";
-    cout << "Choose a nomber for processing a command.\n";
+    cout << "\nApp menu.\n";
+    cout << "Choose a number for processing a command.\n";
     cout << "1 - Add pipe\n";
     cout << "2 - Add CS\n";
     cout << "3 - View all object\n";
@@ -47,17 +47,22 @@ void add_pipe() {
         cout << "ERROR: lenght must be positive! Enter again\n";
         cin >> p.lenght;
     }
-    cout << "Enter the pipe status. (0 - passive, 1 - active)\n";
+    cout << "Enter the pipe status. (P - passive, A - active)\n";
     cin >> p.status;
-    while (p.status != 0  && p.status != 1) {
-        cout << "ERROR: status must be 0 or 1! Enter again\n";
+    while (p.status != 'P' && p.status != 'A') {
+        cout << "ERROR: status of pipe must be 'P' or 'A'\n";
         cin >> p.status;
     }
-    cout << "You add a new pipe!\n";
+    cout << "You add a new pipe!\n\n";
     cout << "Pipe name: " << p.Pipe_name << "\n";
     cout << "Diametr: " << p.diametr << "\n";
     cout << "Lenght: " << p.lenght << "\n";
-    cout << "Status: " << (p.status ? "Active" : "Passsive") << "\n";
+    if (p.status == 'P') {
+        cout << "Status: passive\n";
+    }
+    else {
+        cout << "Status: active\n";
+    }
 }
 
 void add_CS() {
@@ -87,7 +92,11 @@ while (c.CS_class != 'A' && c.CS_class != 'B' && c.CS_class != 'C' && c.CS_class
     cout << "ERROR: Class of CS must be 'A', 'B', 'C' or 'D'\n";
     cin >> c.CS_class;
 }
-cout << "You add a new CS!\n";
+cout << "You add a new CS!\n\n";
+cout << "CS name: " << c.CS_name << "\n";
+cout << "Count workshops: " << c.count_workshops << "\n";
+cout << "Count active workshops: " << c.active_workskops << "\n";
+cout << "CS class: " << c.CS_class << "\n";
 }
 
 int main()
