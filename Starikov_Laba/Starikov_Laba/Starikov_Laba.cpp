@@ -2,7 +2,10 @@
 //
 
 #include <iostream>
+#include <vector>
 using namespace std;
+
+
 
 struct Pipe {
     string Pipe_name;
@@ -17,6 +20,9 @@ struct CS {
     int active_workskops;
     char CS_class;
 };
+
+vector<Pipe> pipes;
+vector<CS> css;
 
 void zapusk() {
     cout << "\nApp menu.\n";
@@ -53,6 +59,7 @@ void add_pipe() {
         cout << "ERROR: status of pipe must be 'P' or 'A'\n";
         cin >> p.status;
     }
+    pipes.push_back(p);
     cout << "You add a new pipe!\n\n";
     cout << "Pipe name: " << p.Pipe_name << "\n";
     cout << "Diametr: " << p.diametr << "\n";
@@ -92,11 +99,46 @@ while (c.CS_class != 'A' && c.CS_class != 'B' && c.CS_class != 'C' && c.CS_class
     cout << "ERROR: Class of CS must be 'A', 'B', 'C' or 'D'\n";
     cin >> c.CS_class;
 }
+css.push_back(c);
 cout << "You add a new CS!\n\n";
 cout << "CS name: " << c.CS_name << "\n";
 cout << "Count workshops: " << c.count_workshops << "\n";
 cout << "Count active workshops: " << c.active_workskops << "\n";
 cout << "CS class: " << c.CS_class << "\n";
+}
+
+void view_objects() {
+    cout << "Your pipes:\n\n";
+    if (pipes.empty()) {
+        cout << "No added pipes\n";
+    }
+    else {
+        for (size_t i = 0;i < pipes.size(); i++) {
+            cout << "Pipe #" << i + 1 << "\n";
+            cout << "Name: " << pipes[i].Pipe_name << "\n";
+            cout << "Diametr: " << pipes[i].diametr << "\n";
+            cout << "Lenght: " << pipes[i].lenght << "\n";
+            if (pipes[i].status == 'P') {
+                cout << "Status: Passive\n";
+            }
+            else {
+                cout << "Status: Active\n";
+            }
+        }
+    }
+    cout << "Your CSs:\n\n";
+    if (css.empty()) {
+        cout << "No added CSs\n";
+    }
+    else {
+        for (size_t i = 0;i < css.size(); i++) {
+            cout << "CS #" << i + 1 << "\n";
+            cout << "Name: " << css[i].CS_name << "\n";
+            cout << "Count workshops: " << css[i].count_workshops << "\n";
+            cout << "Active workshops: " << css[i].active_workskops << "\n";
+            cout << "Class: " << css[i].CS_class << "\n";
+        }
+    }
 }
 
 int main()
@@ -118,6 +160,10 @@ int main()
 
                 else if (user == 2) {
                     add_CS();
+                }
+
+                else if (user == 3) {
+                    view_objects();
                 }
 
                 else if (user == 0) {
