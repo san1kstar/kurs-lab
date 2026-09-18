@@ -141,11 +141,51 @@ void view_objects() {
     }
 }
 
+void edit_pipe() {
+    if (pipes.empty()) {
+        cout << "No added pipes\n";
+        return;
+    }
+    cout << "Avalibale pipes: \n";
+    for (int i = 0;i < pipes.size();i++) {
+        cout << i + 1 << " - " << pipes[i].Pipe_name << "\n";
+    }
+    int num;
+    cout << "Choose the number of pipe to edit (0 - cancel)\n";
+    cin >> num;
+
+    while (num < 0 || num >(int)pipes.size()) {
+        cout << "error\n";
+        cin >> num;
+    }
+    if (num == 0) {
+        return;
+    }
+    cout << "\nWhat do you want to edit?\n";
+    cout << "1 - Name\n";
+    cout << "2 - Diameter\n";
+    cout << "3 - Length\n";
+    cout << "4 - Status\n";
+    cout << "0 - Cancel\n";
+    int f;
+    cin >> f;
+    int index = num - 1;
+    if (f == 0) {
+        return;
+    }
+    else if (f == 1) {
+        cout << "new name\n";
+        cin >> pipes[index].Pipe_name;
+    }
+    else {
+        cout << "error\n";
+    }
+}
+
 int main()
 {
     while (true) {
         string w;
-        int user;
         cout << "press 'w' for begin work\n";
         cin >> w;
         if (w == "w") {
@@ -164,6 +204,10 @@ int main()
 
                 else if (user == 3) {
                     view_objects();
+                }
+
+                else if (user == 4) {
+                    edit_pipe();
                 }
 
                 else if (user == 0) {
