@@ -5,20 +5,21 @@
 #include <vector>
 #include <fstream>
 #include <limits>
+#include <string>
 using namespace std;
 
 struct Pipe {
-    string Pipe_name;
-    double lenght;
-    float diametr;
-    char status;
+    string Pipe_name = "";
+    double lenght = 0.0;
+    float diametr = 0.0f;
+    char status = 'P';
 };
 
 struct CS {
-    string CS_name;
-    int count_workshops;
-    int active_workskops;
-    char CS_class;
+    string CS_name = "";
+    int count_workshops = 0;
+    int active_workskops = 0;
+    char CS_class = 'A';
 };
 
 vector<Pipe> pipes;
@@ -42,10 +43,17 @@ void check() {
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
+string line_with_space() {
+    string v;
+    cin.ignore();
+    getline(cin, v);
+    return v;
+}
+
 void add_pipe() {
     Pipe p;
     cout << "Give a name to the pipe.\n";
-    cin >> p.Pipe_name;
+    p.Pipe_name = line_with_space();
     cout << "Enter the pipe diameter.\n";
     cin >> p.diametr;
     while (p.diametr <= 0 || cin.fail()) {
@@ -82,7 +90,7 @@ void add_pipe() {
 void add_CS() {
 CS c;
 cout << "Give a name to the CS\n";
-cin >> c.CS_name;
+c.CS_name = line_with_space();
 cout << "Enter the count of workshops in CS\n";
 cin >> c.count_workshops;
 while (c.count_workshops <= 0 || cin.fail()) {
@@ -188,7 +196,7 @@ void save() {
         return;
     }
     if (!pipes.empty()) {
-        out << "Name: " << pipes[0].Pipe_name << "\n";
+        out << pipes[0].Pipe_name << "\n";
         out << pipes[0].diametr << "\n";
         out << pipes[0].lenght << "\n";
         out << pipes[0].status << "\n";
@@ -204,7 +212,7 @@ void save() {
 }
 
 void download() {
-    ifstream in("download.txt");
+    ifstream in("save.txt");
     if (!in.is_open()) {
         cout << "error\n";
         return;
@@ -212,70 +220,59 @@ void download() {
     pipes.clear();
     css.clear();
     Pipe p;
-    if (in >> p.Pipe_name >> p.diametr >> p.lenght >> p.status) {
+    if (getline(in, p.Pipe_name)) {
+        in >> p.diametr;
+        in >> p.lenght;
+        in >> p.status;
+        in.ignore();
         pipes.push_back(p);
     }
 
     CS c;
-    if (in >> c.CS_name >> c.count_workshops >> c.active_workskops >> c.CS_class) {
+    if (getline(in, c.CS_name)){
+        in >> c.count_workshops;
+        in >> c.active_workskops;
+        in >> c.CS_class;
+        in.ignore();
         css.push_back(c);
     }
     in.close();
     cout << "data was downloading\n";
 }
 
-int main()
-{
+int main() {
     while (true) {
         string w;
-        cout << "press 'w' for begin work\n";
+        cout << "press w for begin work\n";
         cin >> w;
         if (w == "w") {
             while (true) {
                 zapusk();
                 int user;
                 cin >> user;
-
-                if (user == 1) {
-                    add_pipe();
+                while (cin.fail()) {
+                    check();
+                    cout << "error\n";
+                    cin >> user;
                 }
-
-                else if (user == 2) {
-                    add_CS();
-                }
-
-                else if (user == 3) {
-                    view_objects();
-                }
-
-                else if (user == 4) {
-                    edit_pipe();
-                }
-
-                else if (user == 5) {
-                    edit_CS();
-                }
-
-                else if (user == 6) {
-                    save();
-                }
-
-                else if (user == 7) {
-                    download();
-                }
-
-                else if (user == 0) {
-                    cout << "Work is over.\n";
+                switch (user) {
+                case 1: add_pipe(); break;
+                case 2: add_CS(); break;
+                case 3: view_objects(); break;
+                case 4: edit_pipe(); break;
+                case 5: edit_CS(); break;
+                case 6: save(); break;
+                case 7: download(); break;
+                case 0:
+                    cout << "work is over\n";
                     return 0;
-                }
-
-                else {
+                default:
                     cout << "Invalid command, try again\n";
                 }
             }
         }
         else {
-            cout << "Invalid key. Press 'w' to continue.\n";
+            cout << "Invalid key, press w to start\n";
         }
     }
 }
