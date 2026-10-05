@@ -2,7 +2,6 @@
 //
 
 #include <iostream>
-#include <vector>
 #include <fstream>
 #include <limits>
 #include <string>
@@ -51,6 +50,10 @@ string line_with_space() {
 void add_pipe(Pipe& p) {
     cout << "Give a name to the pipe.\n";
     p.Pipe_name = line_with_space();
+    while (p.Pipe_name == "") {
+        cout << "error\n";
+        p.Pipe_name = line_with_space();
+    }
     cout << "Enter the pipe diameter.\n";
     cin >> p.diametr;
     while (p.diametr <= 0 || cin.fail()) {
@@ -86,6 +89,10 @@ void add_pipe(Pipe& p) {
 void add_CS(CS& c) {
 cout << "Give a name to the CS\n";
 c.CS_name = line_with_space();
+while (c.CS_name == "") {
+    cout << "error\n";
+    c.CS_name = line_with_space();
+}
 cout << "Enter the count of workshops in CS\n";
 cin >> c.count_workshops;
 while (c.count_workshops <= 0 || cin.fail()) {
