@@ -1,0 +1,7 @@
+6
+file
+3
+4
+1
+2
+n stream

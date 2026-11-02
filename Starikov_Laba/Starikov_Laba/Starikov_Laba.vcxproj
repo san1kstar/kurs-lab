@@ -139,11 +139,13 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Checks.cpp" />
     <ClCompile Include="CS.cpp" />
     <ClCompile Include="Pipe.cpp" />
     <ClCompile Include="Starikov_Laba.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Checks.h" />
     <ClInclude Include="CS.h" />
     <ClInclude Include="Pipe.h" />
   </ItemGroup>
