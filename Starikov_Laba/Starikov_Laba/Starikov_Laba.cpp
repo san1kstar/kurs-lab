@@ -1,9 +1,10 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
+#include <algorithm>
 #include <chrono>
 #include <format>
-#include <vector>
 #include <unordered_map>
 #include "Checks.h"
 #include "Pipe.h"
@@ -12,32 +13,44 @@
 using namespace std;
 
 void launching() {
-    cout << "\nApp menu:\n";
+    cout << "\nMENU\n";
     cout << "1 - Add pipe\n";
-    cout << "2 - Add Compression station\n";
-    cout << "3 - View all items\n";
-    cout << "4 - Find object\n";
+    cout << "2 - Add CS\n";
+    cout << "3 - View all objects\n";
+    cout << "4 - Find & Manage\n";
     cout << "5 - Save to file\n";
-    cout << "6 - Download from file\n";
+    cout << "6 - Load from file\n";
     cout << "0 - Exit\n";
 }
 
-void view_pipe(unordered_map<int, Pipe>& pipes) {
+void AddPipe(unordered_map<int, Pipe>& pipes) {
+    Pipe p;
+    cin >> p;
+    pipes.emplace(p.GetID(), p);
+    cout << "Pipe added with ID: " << p.GetID() << "\n";
+}
+
+void AddCS(unordered_map<int, CS>& css) {
+    CS c;
+    cin >> c;
+    css.emplace(c.GetID(), c);
+    cout << "CS added with ID: " << c.GetID() << "\n";
+}
+
+void view(unordered_map<int, Pipe>& pipes, unordered_map<int, CS>& css) {
     cout << "\nPIPES\n";
     if (pipes.empty()) {
-        cout << "No added pipes.\n";
+        cout << "No pipes.\n";
     }
     else {
         for (auto& pair : pipes) {
             cout << pair.second;
         }
     }
-}
 
-void view_cs(unordered_map<int, CS>& css) {
     cout << "\nCS\n";
     if (css.empty()) {
-        cout << "No added CS.\n";
+        cout << "No CS.\n";
     }
     else {
         for (auto& pair : css) {
@@ -46,309 +59,324 @@ void view_cs(unordered_map<int, CS>& css) {
     }
 }
 
-void viewAll(unordered_map<int, Pipe>& pipes, unordered_map<int, CS>& css) {
-    view_pipe(pipes);
-    view_cs(css);
+void editPipe(unordered_map<int, Pipe>& pipes, int id) {
+    int s = inputInt(cin, "Enter new status (1 - working, 0 - broken): ", 0, 1);
+    bool new_status = (s == 1);
+
+    if (pipes.find(id) != pipes.end()) {
+        pipes[id].SetWorking(new_status);
+        cout << "Pipe #" << id << " updated.\n";
+    }
+    else {
+        cout << "Pipe #" << id << " not found.\n";
+    }
 }
 
-void AddPipe(unordered_map<int, Pipe>& pipes) {
-    Pipe p;
-    cin >> p;
-    int id = p.GetID();
-    pipes.emplace(id, p);
-    cout << "Pipe added with ID: " << id << "\n";
+void deletePipe(unordered_map<int, Pipe>& pipes, int id) {
+    if (pipes.erase(id)) {
+        cout << "Pipe #" << id << " deleted.\n";
+    }
+    else {
+        cout << "Pipe #" << id << " not found.\n";
+    }
 }
 
-void AddCS(unordered_map<int, CS>& css) {
-    CS c;
-    cin >> c;
-    int id = c.GetID();
-    css.emplace(id, c);
-    cout << "CS added with ID: " << id << "\n";
-}
+void editCS(unordered_map<int, CS>& css, int id) {
+    int new_active = inputInt(cin, "Enter new active count: ", 0, 10000);
 
-int chooseTargets(int found_count) {
-    cout << "1 - Apply to ALL found\n";
-    cout << "2 - Choose specific ID\n";
-    return inputInt(cin, "Your choice: ", 1, 2);
-}
-
-bool find_pipes(unordered_map<int, Pipe>& pipes, int mode, int id, string name, char status, vector<int>& found_ids) {
-    found_ids.clear();
-    cout << "Found Pipes: ";
-    for (auto& pair : pipes) {
-        bool match = false;
-        switch (mode) {
-        case 1: match = (pair.second.GetID() == id); break;
-        case 2: match = (pair.second.name.find(name) != string::npos); break;
-        case 3: match = (pair.second.status == status); break;
+    if (css.find(id) != css.end()) {
+        if (new_active <= css[id].GetWorkshops()) {
+            css[id].SetActive(new_active);
+            cout << "CS #" << id << " updated.\n";
         }
-        if (match) {
-            cout << pair.second.GetID() << " ";
-            found_ids.push_back(pair.second.GetID());
+        else {
+            cout << "Error: active > total for CS #" << id << "\n";
         }
     }
-    cout << endl;
-    return !found_ids.empty();
+    else {
+        cout << "CS #" << id << " not found.\n";
+    }
 }
 
-bool find_css(unordered_map<int, CS>& css, int mode, int id, string name, int percent, vector<int>& found_ids) {
-    found_ids.clear();
-    cout << "Found CS: ";
-    for (auto& pair : css) {
-        bool match = false;
-        switch (mode) {
-        case 1: match = (pair.second.GetID() == id); break;
-        case 2: match = (pair.second.name.find(name) != string::npos); break;
-        case 3: match = (pair.second.GetUnusedPercent() >= percent); break;
-        }
-        if (match) {
-            cout << pair.second.GetID() << " ";
-            found_ids.push_back(pair.second.GetID());
+void deleteCS(unordered_map<int, CS>& css, int id) {
+    if (css.erase(id)) {
+        cout << "CS #" << id << " deleted.\n";
+    }
+    else {
+        cout << "CS #" << id << " not found.\n";
+    }
+}
+
+vector<int> SearchPipesByID(unordered_map<int, Pipe>& pipes) {
+    int id = inputInt(cin, "Enter Pipe ID: ", 1, Pipe::GetMaxID());
+    vector<int> res;
+    if (pipes.find(id) != pipes.end()) {
+        res.push_back(id);
+    }
+    return res;
+}
+
+vector<int> SearchPipesByName(unordered_map<int, Pipe>& pipes) {
+    string name = inputName(cin, "Enter name (substring): ");
+    vector<int> res;
+    for (const auto& [id, p] : pipes) {
+        if (p.GetName().find(name) != string::npos) {
+            res.push_back(id);
         }
     }
-    cout << endl;
-    return !found_ids.empty();
+    return res;
+}
+
+vector<int> SearchPipesByStatus(unordered_map<int, Pipe>& pipes) {
+    int st = inputInt(cin, "Enter status (1 - working, 0 - broken): ", 0, 1);
+    bool target_status = (st == 1);
+    vector<int> res;
+    for (const auto& [id, p] : pipes) {
+        if (p.IsWorking() == target_status) {
+            res.push_back(id);
+        }
+    }
+    return res;
+}
+
+vector<int> SearchCSSByID(unordered_map<int, CS>& css) {
+    int id = inputInt(cin, "Enter CS ID: ", 1, CS::GetMaxID());
+    vector<int> res;
+    if (css.find(id) != css.end()) {
+        res.push_back(id);
+    }
+    return res;
+}
+
+vector<int> SearchCSSByName(unordered_map<int, CS>& css) {
+    string name = inputName(cin, "Enter name (substring): ");
+    vector<int> res;
+    for (const auto& [id, c] : css) {
+        if (c.GetName().find(name) != string::npos) {
+            res.push_back(id);
+        }
+    }
+    return res;
+}
+
+vector<int> SearchCSSByPercent(unordered_map<int, CS>& css) {
+    int percent = inputInt(cin, "Enter min unused percent (0-100): ", 0, 100);
+    vector<int> res;
+    for (const auto& [id, c] : css) {
+        if (c.GetUnusedPercent() >= percent) {
+            res.push_back(id);
+        }
+    }
+    return res;
 }
 
 void manage_pipes(unordered_map<int, Pipe>& pipes, vector<int>& found_ids) {
-    int pick = chooseTargets(found_ids.size());
+    cout << "Found: " << found_ids.size() << "\n";
+    for (int id : found_ids) {
+        cout << id << " ";
+    }
+    cout << "\n";
+
+    int pick = inputInt(cin, "1 - Apply to ALL, 2 - Choose ID: ", 1, 2);
     vector<int> targets;
 
     if (pick == 1) {
         targets = found_ids;
     }
     else {
-        int id = inputInt(cin, "Enter ID: ", 1, Pipe::MaxID);
-        targets.push_back(id);
+        targets.push_back(inputInt(cin, "Enter ID: ", 1, Pipe::GetMaxID()));
     }
 
-    cout << "1 - Edit status\n";
-    cout << "2 - Delete\n";
-    int action = inputInt(cin, "Your choice: ", 1, 2);
+    int action = inputInt(cin, "1 - Edit status, 2 - Delete: ", 1, 2);
 
-    if (action == 1) {
-        char new_status = inputChar(cin, "Enter new status (P - passive, A - active): ", 'A', 'P');
-        for (int id : targets) {
-            if (pipes.find(id) != pipes.end()) {
-                pipes[id].status = new_status;
-                cout << "Pipe #" << id << " updated (status -> " << new_status << ").\n";
-            }
-            else {
-                cout << "Pipe #" << id << " not found.\n";
-            }
+    for (int id : targets) {
+        if (action == 1) {
+            editPipe(pipes, id);
         }
-    }
-    else {
-        for (int id : targets) {
-            if (pipes.erase(id)) {
-                cout << "Pipe #" << id << " deleted.\n";
-            }
-            else {
-                cout << "Pipe #" << id << " not found.\n";
-            }
+        else {
+            deletePipe(pipes, id);
         }
     }
 }
 
 void manage_css(unordered_map<int, CS>& css, vector<int>& found_ids) {
-    int pick = chooseTargets(found_ids.size());
+    cout << "Found: " << found_ids.size() << "\n";
+    for (int id : found_ids) {
+        cout << id << " ";
+    }
+    cout << "\n";
+
+    int pick = inputInt(cin, "1 - Apply to ALL, 2 - Choose ID: ", 1, 2);
     vector<int> targets;
 
     if (pick == 1) {
         targets = found_ids;
     }
     else {
-        int id = inputInt(cin, "Enter ID: ", 1, CS::MaxID);
-        targets.push_back(id);
+        targets.push_back(inputInt(cin, "Enter ID: ", 1, CS::GetMaxID()));
     }
 
-    cout << "1 - Edit active workshops\n";
-    cout << "2 - Delete\n";
-    int action = inputInt(cin, "Your choice: ", 1, 2);
+    int action = inputInt(cin, "1 - Edit active, 2 - Delete: ", 1, 2);
 
-    if (action == 1) {
-        int new_active = inputInt(cin, "Enter new active workshops count: ", 0, 1000);
-        for (int id : targets) {
-            if (css.find(id) != css.end()) {
-                if (new_active <= css[id].count_workshops) {
-                    css[id].active_workshops = new_active;
-                    cout << "CS #" << id << " updated (active -> " << new_active << ").\n";
-                }
-                else {
-                    cout << "Error: new active > total workshops for CS #" << id << "\n";
-                }
-            }
-            else {
-                cout << "CS #" << id << " not found.\n";
-            }
+    for (int id : targets) {
+        if (action == 1) {
+            editCS(css, id);
         }
-    }
-    else {
-        for (int id : targets) {
-            if (css.erase(id)) {
-                cout << "CS #" << id << " deleted.\n";
-            }
-            else {
-                cout << "CS #" << id << " not found.\n";
-            }
+        else {
+            deleteCS(css, id);
         }
     }
 }
 
 void SearchAndManage(unordered_map<int, Pipe>& pipes, unordered_map<int, CS>& css) {
-    cout << "\nSEARCH\n";
-    cout << "What to search?\n1. Pipe\n2. CS\n";
-    int type = inputInt(cin, "Your choice: ", 1, 2);
+    int type = inputInt(cin, "1 - Pipe, 2 - CS: ", 1, 2);
+    int mode = inputInt(cin, "1 - ID, 2 - Name, 3 - Filter: ", 1, 3);
 
-    int search_mode = 0;
-    int search_id = -1;
-    string search_name = "";
-    char search_status = ' ';
-    int search_percent = -1;
-    vector<int> found_ids;
+    vector<int> found;
 
     if (type == 1) {
-        cout << "Search by:\n1. ID\n2. Name\n3. Status 'P'\n";
-        search_mode = inputInt(cin, "Your choice: ", 1, 3);
-        switch (search_mode) {
-        case 1: search_id = inputInt(cin, "Enter ID: ", 1, Pipe::MaxID); break;
-        case 2: search_name = inputName(cin, "Enter name: "); break;
-        case 3: search_status = inputChar(cin, "Enter status (P/A): ", 'A', 'P'); break;
+        if (mode == 1) {
+            found = SearchPipesByID(pipes);
         }
-        if (!find_pipes(pipes, search_mode, search_id, search_name, search_status, found_ids)) {
-            cout << "No objects found.\n";
+        else if (mode == 2) {
+            found = SearchPipesByName(pipes);
+        }
+        else if (mode == 3) {
+            found = SearchPipesByStatus(pipes);
+        }
+
+        if (found.empty()) {
+            cout << "Nothing found.\n";
             return;
         }
-        manage_pipes(pipes, found_ids);
+        manage_pipes(pipes, found);
     }
     else {
-        cout << "Search by:\n1. ID\n2. Name)\n3. Unused percent >= X%\n";
-        search_mode = inputInt(cin, "Your choice: ", 1, 3);
-        switch (search_mode) {
-        case 1: search_id = inputInt(cin, "Enter ID: ", 1, CS::MaxID); break;
-        case 2: search_name = inputName(cin, "Enter name: "); break;
-        case 3: search_percent = inputInt(cin, "Enter min unused percent: ", 0, 100); break;
+        if (mode == 1) {
+            found = SearchCSSByID(css);
         }
-        if (!find_css(css, search_mode, search_id, search_name, search_percent, found_ids)) {
-            cout << "No objects found.\n";
+        else if (mode == 2) {
+            found = SearchCSSByName(css);
+        }
+        else if (mode == 3) {
+            found = SearchCSSByPercent(css);
+        }
+
+        if (found.empty()) {
+            cout << "Nothing found.\n";
             return;
         }
-        manage_css(css, found_ids);
+        manage_css(css, found);
     }
 }
 
-void save_pipe(ofstream& fout, const unordered_map<int, Pipe>& pipes) {
-    fout << "PIPES" << endl;
-    fout << pipes.size() << endl;
-    for (const auto& [id, p] : pipes) {
-        fout << p.GetID() << endl << p.name << endl
-            << p.length << endl << p.diameter << endl << p.status << endl;
-    }
-}
-
-void save_cs(ofstream& fout, const unordered_map<int, CS>& css) {
-    fout << "CS" << endl;
-    fout << css.size() << endl;
-    for (const auto& [id, c] : css) {
-        fout << c.GetID() << endl << c.name << endl
-            << c.count_workshops << endl << c.active_workshops << endl << c.cs_class << endl;
-    }
-}
 
 void saveToFile(const unordered_map<int, Pipe>& pipes, const unordered_map<int, CS>& css) {
-    string filename = inputFileName(cin, "Enter the file name to save to: ");
+    string filename = inputFileName(cin, "Enter filename to save: ");
     ofstream fout(filename);
     if (!fout.is_open()) {
-        cout << "Error: could not open file " << filename << "\n";
+        cout << "Error opening file.\n";
         return;
     }
-    save_pipe(fout, pipes);
-    save_cs(fout, css);
-    fout.close();
-    cout << "Writing to the file " << filename << " is complete.\n";
-}
-
-int load_pipe(ifstream& fin, unordered_map<int, Pipe>& pipes) {
-    int max_id = 0;
-    int count;
-    fin >> count;
-    fin.ignore();
-    for (int i = 0; i < count; i++) {
-        Pipe p;
-        int tmp_id;
-        fin >> tmp_id;
-        fin.ignore();
-        getline(fin, p.name);
-        fin >> p.length >> p.diameter >> p.status;
-        fin.ignore();
-        pipes.insert(make_pair(tmp_id, p));
-        if (tmp_id > max_id) max_id = tmp_id;
+    for (const auto& [id, p] : pipes) {
+        fout << p;
     }
-    return max_id;
-}
-
-int load_cs(ifstream& fin, unordered_map<int, CS>& css) {
-    int max_id = 0;
-    int count;
-    fin >> count;
-    fin.ignore();
-    for (int i = 0; i < count; i++) {
-        CS c;
-        int tmp_id;
-        fin >> tmp_id;
-        fin.ignore();
-        getline(fin, c.name);
-        fin >> c.count_workshops >> c.active_workshops >> c.cs_class;
-        fin.ignore();
-        css.insert(make_pair(tmp_id, c));
-        if (tmp_id > max_id) max_id = tmp_id;
+    for (const auto& [id, c] : css) {
+        fout << c;
     }
-    return max_id;
+    cout << "Saved.\n";
 }
 
 void loadFromFile(unordered_map<int, Pipe>& pipes, unordered_map<int, CS>& css) {
-    string filename = inputFileName(cin, "Enter the file name to load from: ");
+    string filename = inputFileName(cin, "Enter filename to load: ");
     ifstream fin(filename);
     if (!fin.is_open()) {
-        cout << "Error: could not open file " << filename << "\n";
+        cout << "Error opening file.\n";
         return;
     }
+
     pipes.clear();
     css.clear();
-    int max_pipe_id = 0, max_cs_id = 0;
+
+    int max_p = 0;
+    int max_c = 0;
     string marker;
+
     while (getline(fin, marker)) {
-        if (marker == "PIPES") max_pipe_id = load_pipe(fin, pipes);
-        else if (marker == "CS") max_cs_id = load_cs(fin, css);
+        if (marker == "P") {
+            string line;
+            getline(fin, line);
+            int id = stoi(line);
+
+            Pipe p(id);
+            fin >> p;
+
+            pipes.emplace(id, p);
+
+            if (id > max_p) {
+                max_p = id;
+            }
+        }
+        else if (marker == "C") {
+            string line;
+            getline(fin, line);
+            int id = stoi(line);
+
+            CS c(id);
+            fin >> c;
+
+            css.emplace(id, c);
+
+            if (id > max_c) {
+                max_c = id;
+            }
+        }
     }
-    if (max_pipe_id > 0) Pipe::SetMaxID(max_pipe_id);
-    if (max_cs_id > 0) CS::SetMaxID(max_cs_id);
+
+    Pipe::SetMaxID(max_p);
+    CS::SetMaxID(max_c);
+
     fin.close();
-    cout << "Reading from the file " << filename << " is complete.\n";
+    cout << "Loaded.\n";
 }
 
 int main() {
     redirect_output_wrapper cerr_out(cerr);
     string timestamp = std::format("{:%d_%m_%Y %H_%M_%OS}", chrono::system_clock::now());
     ofstream logfile("log_" + timestamp + ".txt");
-    if (logfile)
+    if (logfile) {
         cerr_out.redirect(logfile);
+    }
 
     unordered_map<int, Pipe> pipes;
     unordered_map<int, CS> css;
 
     while (true) {
         launching();
-        int choice = inputInt(cin, "Enter a number to execute a command: ", 0, 6);
+
+        int choice = inputInt(cin, "Your choice: ", 0, 6);
+
         switch (choice) {
-        case 0: return 0;
-        case 1: AddPipe(pipes); break;
-        case 2: AddCS(css); break;
-        case 3: viewAll(pipes, css); break;
-        case 4: SearchAndManage(pipes, css); break;
-        case 5: saveToFile(pipes, css); break;
-        case 6: loadFromFile(pipes, css); break;
+        case 0:
+            return 0;
+        case 1:
+            AddPipe(pipes);
+            break;
+        case 2:
+            AddCS(css);
+            break;
+        case 3:
+            view(pipes, css);
+            break;
+        case 4:
+            SearchAndManage(pipes, css);
+            break;
+        case 5:
+            saveToFile(pipes, css);
+            break;
+        case 6:
+            loadFromFile(pipes, css);
+            break;
         }
     }
 }

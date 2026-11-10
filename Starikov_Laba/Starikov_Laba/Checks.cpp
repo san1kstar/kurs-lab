@@ -1,5 +1,4 @@
 #include "Checks.h"
-#include <limits>
 
 redirect_output_wrapper::redirect_output_wrapper(std::ostream& src)
     : stream(src), old_buf(src.rdbuf()) {
@@ -15,7 +14,7 @@ void redirect_output_wrapper::redirect(std::ostream& dest) {
 
 void clearInput(std::istream& in) {
     in.clear();
-    in.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    in.ignore(1000, '\n');
 }
 
 std::string inputName(std::istream& in, const std::string& prompt) {
@@ -48,48 +47,6 @@ std::string inputFileName(std::istream& in, const std::string& prompt) {
     return name;
 }
 
-int inputInt(std::istream& in, const std::string& prompt, int lo, int hi) {
-    int x;
-    while (true) {
-        std::cout << prompt;
-        in >> x;
-        if (in.fail() || in.peek() != '\n') {
-            std::cout << "Error, the input doesn't match the type. Try again.\n";
-            clearInput(in);
-        }
-        else if (x < lo || x > hi) {
-            std::cout << "Error, the number must be from " << lo << " to " << hi << ". Try again.\n";
-            in.ignore(1000, '\n');
-        }
-        else {
-            in.ignore(1000, '\n');
-            std::cerr << x << std::endl;
-            return x;
-        }
-    }
-}
-
-int inputPositiveInt(std::istream& in, const std::string& prompt) {
-    int x;
-    while (true) {
-        std::cout << prompt;
-        in >> x;
-        if (in.fail() || in.peek() != '\n') {
-            std::cout << "Error, the input doesn't match the type. Try again.\n";
-            clearInput(in);
-        }
-        else if (x <= 0) {
-            std::cout << "Error, the number must be positive. Try again.\n";
-            in.ignore(1000, '\n');
-        }
-        else {
-            in.ignore(1000, '\n');
-            std::cerr << x << std::endl;
-            return x;
-        }
-    }
-}
-
 double inputPositiveDouble(std::istream& in, const std::string& prompt) {
     double x;
     while (true) {
@@ -101,27 +58,6 @@ double inputPositiveDouble(std::istream& in, const std::string& prompt) {
         }
         else if (x <= 0) {
             std::cout << "Error, the number must be positive. Try again.\n";
-            in.ignore(1000, '\n');
-        }
-        else {
-            in.ignore(1000, '\n');
-            std::cerr << x << std::endl;
-            return x;
-        }
-    }
-}
-
-char inputChar(std::istream& in, const std::string& prompt, char lo, char hi) {
-    char x;
-    while (true) {
-        std::cout << prompt;
-        in >> x;
-        if (in.fail() || in.peek() != '\n') {
-            std::cout << "Error, the input doesn't match the type. Try again.\n";
-            clearInput(in);
-        }
-        else if (x < lo || x > hi) {
-            std::cout << "Error, the character must be from '" << lo << "' to '" << hi << "'. Try again.\n";
             in.ignore(1000, '\n');
         }
         else {

@@ -1,34 +1,36 @@
-PIPES
-3
+P
 1
-n stream
-44
-44
+north stream 1
+66
+66
+0
 P
 2
-n stream 2
-22
-22
-A
+north stream 2
+44
+44
+1
+P
 3
 test
-55
-55
-P
-CS
-3
+77
+77
+0
+C
 1
-g store
+g store 1
 30
-22
-A
+25
+B
+C
 2
 g store 2
-30
+20
 10
-B
+A
+C
 3
 test
-10
+20
 1
-A
+C
